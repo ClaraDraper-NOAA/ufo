@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2026 NOAA/NCEP/EMC
+ * (C) Copyright 2026 NOAA/NCEP/OMD
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -47,32 +47,30 @@ void ModelLevelsBelowSurface::compute(const ObsFilterData & in,
 
   const float missing = util::missingValue<float>();
 
-  const std::size_t nlocs = in.nlocs();
-  const Variable prsVar("GeoVaLs/air_pressure");
-  const std::size_t nlevs = in.nlevs(prsVar);
-  ASSERT(nlevs > 1);
+  const size_t nlocs = in.nlocs();
+  const Variable modPrsVar("GeoVaLs/air_pressure");
+  const size_t nlevs = in.nlevs(modPrsVar);
 
   std::vector<float> obsPressure(nlocs);
   in.get(options_.obsPressure.value(), obsPressure);
-  std::vector<float> sfcPressure(nlocs);
-  in.get(Variable("GeoVaLs/air_pressure_at_surface"), sfcPressure);
+  std::vector<float> modSfcPressure(nlocs);
+  in.get(Variable("GeoVaLs/air_pressure_at_surface"), modSfcPressure);
 
-  // The two lowest model levels (GeoVaLs are ordered from the top of the atmosphere down).
-  std::vector<float> prs1(nlocs), prs2(nlocs);
-  in.get(prsVar, nlevs - 1, prs1);
-  in.get(prsVar, nlevs - 2, prs2);
+  // get depth of the lowest model layer.
+  std::vector<float> modPrs1(nlocs), modPrs2(nlocs);
+  in.get(modPrsVar, nlevs - 1, modPrs1);
+  in.get(modPrsVar, nlevs - 2, modPrs2);
 
-  for (std::size_t jloc = 0; jloc < nlocs; ++jloc) {
-    out[0][jloc] = missing;
-    if (obsPressure[jloc] == missing || sfcPressure[jloc] == missing ||
-        prs1[jloc] == missing || prs2[jloc] == missing) continue;
-    // The model surface is below the lowest model level.
-    ASSERT(sfcPressure[jloc] >= prs1[jloc] && prs1[jloc] > prs2[jloc]);
-    if (obsPressure[jloc] > sfcPressure[jloc]) {
-      out[0][jloc] = std::log(obsPressure[jloc] / sfcPressure[jloc]) /
-                     std::log(prs1[jloc] / prs2[jloc]);
+  for (size_t jj = 0; jj < nlocs; ++j) {
+    if (obsPressure[jj] == missing || modSfcPressure[jj] == missing ||
+        prs1[jj] == missing || prs2[jj] == missing) {
+      out[0][jj] = missing;
+        } 
+    else if (obsPressure[jj] > modSfcPressure[jj]) {
+      out[0][jj] = std::log(obsPressure[jj] / modSfcPressure[jj]) /
+                     std::log(prs1[jj] / prs2[jj]);
     } else {
-      out[0][jloc] = 0.0f;
+      out[0][jj] = 0.0f;
     }
   }
   oops::Log::trace() << "ModelLevelsBelowSurface compute complete" << std::endl;
