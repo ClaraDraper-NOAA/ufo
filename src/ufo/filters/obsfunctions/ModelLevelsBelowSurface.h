@@ -33,9 +33,9 @@ class ModelLevelsBelowSurfaceParameters : public oops::Parameters {
 
 /// \brief Number of model levels an observation is below the model surface.
 ///
-/// \details For obs below the model surface (p_obs > p_sfc), returns 
-/// ln(p_obs/p_sfc) / ln(p_1/p_2), where p_* is the model pressure at that 
-/// level. This is the depth of the observation below the model surface in 
+/// \details For obs below the model surface (p_obs > p_sfc), returns
+/// ln(p_obs/p_sfc) / ln(p_1/p_2), where p_* is the model pressure at that
+/// level. This is the depth of the observation below the model surface in
 /// model levels. Returns zero for obs above the surface. This is the GSI's
 /// rlow variable, which is used for obs error inflation.
 ///

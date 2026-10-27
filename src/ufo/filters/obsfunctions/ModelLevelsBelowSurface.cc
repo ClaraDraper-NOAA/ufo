@@ -65,7 +65,7 @@ void ModelLevelsBelowSurface::compute(const ObsFilterData & in,
     if (obsPressure[jj] == missing || modSfcPressure[jj] == missing ||
         prs1[jj] == missing || prs2[jj] == missing) {
       out[0][jj] = missing;
-        } 
+        }
     else if (obsPressure[jj] > modSfcPressure[jj]) {
       out[0][jj] = std::log(obsPressure[jj] / modSfcPressure[jj]) /
                      std::log(prs1[jj] / prs2[jj]);
