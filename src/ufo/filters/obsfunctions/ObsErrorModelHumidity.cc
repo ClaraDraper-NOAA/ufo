@@ -142,7 +142,9 @@ void ObsErrorModelHumidity::compute(const ObsFilterData & data,
   }
 
   // Linearly interpolate from y0 to y1 at xstar between x0 and x1 to arrive at error
-  float x0, x1, y0, y1;
+  // Interpolate in double precision with weights, so that the result equals y1 at x1 even when
+  // y0 and y1 differ by orders of magnitude (e.g. a large dummy error next to a normal one).
+  double x0, x1, y0, y1, weight;
   float xstar, error;
 
   // Get the x-variable name and piece-wise parameters from options
@@ -192,7 +194,8 @@ void ObsErrorModelHumidity::compute(const ObsFilterData & data,
             x1 = xvals[kv];
             y0 = errors[kv-1];
             y1 = errors[kv];
-            error = y0 + (xstar-x0)*((y1-y0)/(x1-x0));
+            weight = (xstar-x0)/(x1-x0);
+            error = static_cast<float>((1.0-weight)*y0 + weight*y1);
             break;
           }
         }
