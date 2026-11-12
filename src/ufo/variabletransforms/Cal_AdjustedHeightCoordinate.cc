@@ -98,6 +98,12 @@ namespace ufo {
                            oops::Variable{"height_above_mean_sea_level_at_surface"},
                            iloc);
 
+      // Set to missing if the model surface height is not available
+      if (surfaceGeometricHeight[0] == missing) {
+        obsHeightNew[iloc] = missing;
+        continue;
+      }
+
       // Shift the observation height by the difference between the model surface height and the
       // station elevation, scaled by (1 - f). Near the station (f = 0) the observation keeps its
       // height above the station, measured from the model surface. Far above the station (f = 1)

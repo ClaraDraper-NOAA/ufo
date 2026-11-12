@@ -97,6 +97,12 @@ namespace ufo {
         continue;
       }
 
+      // Set to missing if the model surface height is not available
+      if (surfaceGeometricHeight[0] == missing) {
+        surfaceWindScalingHeight[iloc] = missing;
+        continue;
+      }
+
       // Compute the wind scaling factor for height coordinate. The observation height and the
       // model heights are above mean sea level; GSI's rules use heights above the model surface.
       const double obsHeightAboveSurface = heightVariable[iloc] - surfaceGeometricHeight[0];
