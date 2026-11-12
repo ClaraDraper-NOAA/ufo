@@ -1,0 +1,92 @@
+# Test of ObsFunction/ObsErrorModelStepwiseLinear with errors that differ by orders of magnitude,
+# as with a large dummy error next to a normal one. The interpolated error must equal the tabulated
+# value at each node. In single precision, y0 + (x-x0)*((y1-y0)/(x1-x0)) cancels to 0 at x1 when
+# x1 is an interior node (at the first and last nodes the tabulated value is used directly).
+#
+#   pressure (Pa)  expected error
+#   100000         1.0e9   (first node)
+#    75000         5.0e8   (half way)
+#    50000         4.0     (interior node, end of the first interval)
+#    40000         4.0     (within the second interval)
+
+time window:
+  begin: 2018-04-14T21:00:00Z
+  end: 2018-04-15T03:00:00Z
+
+observations:
+- obs space:
+    name: Satwind
+    simulated variables: [windEastward]
+    obsdatain:
+      engine:
+        type: GenList
+        lats: [0, 0, 0, 0]
+        lons: [0, 1, 2, 3]
+        dateTimes: [600, 600, 600, 600]
+        epoch: "seconds since 2018-04-14T21:00:00Z"
+        obs errors: [1.0]
+        obs values: [10.0]
+
+  obs filters:
+  - filter: Variable Assignment
+    assignments:
+    - name: MetaData/pressure
+      type: float
+      function:
+        name: ObsFunction/Arithmetic
+        options:
+          variables:
+          - name: MetaData/longitude
+          coefs: [-25000.0]
+          intercept: 100000.0
+  - filter: Variable Assignment
+    where:
+    - variable: MetaData/longitude
+      minvalue: 2.5
+    assignments:
+    - name: MetaData/pressure
+      type: float
+      value: 40000.0
+
+  - filter: Variable Assignment
+    assignments:
+    - name: MetaData/stepwiseError
+      type: float
+      function:
+        name: ObsFunction/ObsErrorModelStepwiseLinear
+        options:
+          xvar:
+            name: MetaData/pressure
+          xvals: [100000, 50000, 30000]
+          errors: [1.0e9, 4.0, 4.0]
+
+  # expected errors
+  - filter: Variable Assignment
+    assignments:
+    - name: TestReference/stepwiseError
+      type: float
+      value: 1.0e9
+  - filter: Variable Assignment
+    where:
+    - variable: MetaData/longitude
+      minvalue: 0.5
+      maxvalue: 1.5
+    assignments:
+    - name: TestReference/stepwiseError
+      type: float
+      value: 5.0e8
+  - filter: Variable Assignment
+    where:
+    - variable: MetaData/longitude
+      minvalue: 1.5
+    assignments:
+    - name: TestReference/stepwiseError
+      type: float
+      value: 4.0
+
+  compareVariables:
+  - test:
+      name: MetaData/stepwiseError
+    reference:
+      name: TestReference/stepwiseError
+    absTol: 1.0e-5
